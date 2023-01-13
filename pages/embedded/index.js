@@ -1,126 +1,45 @@
-import {
-  Layout,
-  Page,
-  FooterHelp,
-  Link,
-  MediaCard,
-  Card,
-  ResourceList,
-  Thumbnail,
-  ResourceItem,
-  TextStyle,
-  TextContainer,
-  Heading,
-} from "@shopify/polaris";
-import { useEffect, useState } from "react";
-import { authenticatedFetch } from "@shopify/app-bridge-utils";
+import Navbar from "@components/elements/Navbar";
+import Loading from "@components/loading";
 import { useAppBridge } from "@shopify/app-bridge-react";
-import Image from "next/image";
+import { Suspense, useState } from "react";
+import fetch from "isomorphic-unfetch";
 
 // noinspection JSUnusedGlobalSymbols
-export default function Index() {
+
+export async function getStaticProps() {
+  // Call an external API endpoint to get posts
+
+  console.log("yooo");
+
+  // const [todosResponse] = await Promise.all([
+  //   fetch("https://jsonplaceholder.typicode.com/todos/2"),
+  // ]);
+
+  const resp = await fetch(
+    "https://6817-2603-7000-c900-480b-7424-102c-29d5-cf85.ngrok.io/api/photo"
+  );
+
+  console.log({ resp });
+  const obj = await resp.json();
+
+  console.log(" here are todods", obj);
+
+  return { props: { todos: obj } };
+}
+
+export default function Index({ todos }) {
   const primaryAction = { content: "Settings", url: "/embedded/settings" };
   const [products, setProducts] = useState([]);
   const app = useAppBridge();
 
-  useEffect(() => {
-    async function getProducts() {
-      const response = await authenticatedFetch(app)("/api/products");
-      const { body } = await response.json();
-      // noinspection JSUnresolvedVariable
-      let data = body.data.products.edges.map((item) => item.node);
-      console.log("body.data", data);
-      setProducts(data);
-    }
-    getProducts();
-  }, [app]);
-
   return (
-    <Page title="NextJS Shopify App" primaryAction={primaryAction}>
-      <Layout>
-        <Layout.Section>
-          <MediaCard
-            title="Welcome to the Shopify NextJS App!"
-            primaryAction={{
-              content: "Learn about getting started",
-              url: "https://shopify.dev/concepts/apps",
-              external: true,
-            }}
-            description="It looks like things are setup correctly and you should be able to start developing."
-            popoverActions={[
-              {
-                content: "Dismiss",
-                onAction: () => {},
-              },
-            ]}
-          >
-            <Image
-              alt=""
-              width="100%"
-              height="100%"
-              style={{
-                objectFit: "cover",
-                objectPosition: "center",
-              }}
-              src="https://burst.shopifycdn.com/photos/coding-on-laptop.jpg?width=1850"
-            />
-          </MediaCard>
-        </Layout.Section>
+    <div>
+      {todos?.id}
 
-        <Layout.Section>
-          <TextContainer>
-            <Heading>A Simple Products List</Heading>
-            <p>
-              This list of products is generated with a request made to the
-              Shopify GraphQL API!
-            </p>
-          </TextContainer>
-        </Layout.Section>
-
-        <Layout.Section>
-          <Card>
-            <ResourceList
-              title="List of Products"
-              resourceName={{ singular: "product", plural: "products" }}
-              items={products}
-              renderItem={(item) => {
-                const { id, onlineStoreUrl, title, featuredImage, vendor } =
-                  item;
-                const media = (
-                  <Thumbnail
-                    source={featuredImage ? featuredImage.src : ""}
-                    alt={featuredImage ? featuredImage.alt : ""}
-                  />
-                );
-
-                return (
-                  <ResourceItem
-                    id={id}
-                    url={onlineStoreUrl}
-                    media={media}
-                    accessibilityLabel={`View details for ${title}`}
-                  >
-                    <h3>
-                      <TextStyle variation="strong">{title}</TextStyle>
-                    </h3>
-                    <div>{vendor}</div>
-                  </ResourceItem>
-                );
-              }}
-            />
-          </Card>
-        </Layout.Section>
-
-        <Layout.Section>
-          <FooterHelp>
-            For more details on Polaris, visit our{" "}
-            <Link url="https://polaris.shopify.com" external={true}>
-              style guide
-            </Link>
-            .
-          </FooterHelp>
-        </Layout.Section>
-      </Layout>
-    </Page>
+      <Suspense fallback={<Loading />}>
+        <Navbar />
+        {todos?.toString()}
+      </Suspense>
+    </div>
   );
 }
